@@ -6,7 +6,7 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/01 11:20:23 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/06 19:08:58 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/07 12:52:16 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,12 +72,33 @@ public:
 	}
 	Node*	Successor(Node* node, int key)
 	{
-		/*
-		case 1 : node x has right subtree
-		case 2 : node x doesnt have right subtree its right child
-		case 3 : node x doesnt have right subtree its left child
-		https://www.youtube.com/watch?v=psFKTGahpCs&ab_channel=sdz
-		*/
+		Node*	tmp = NULL;
+		
+		while (node)
+		{
+			if (key >= node->key)
+				node = node->right;
+			else {
+				tmp = node;
+				node = node->left;
+			}
+		}
+		return tmp;
+	}
+	Node*	Predecessor(Node* node, int key)
+	{
+		Node* tmp = NULL;
+		
+		while (node)
+		{
+			if (key <= node->key)
+				node = node->left;
+			else {
+				tmp = node;
+				node = node->right;
+			}
+		}
+		return tmp;
 	}
 	~bst() {};
 };
@@ -86,8 +107,8 @@ void inorder(Node* root)
 {
 	if (root != NULL)
 	{
-		std::cout << root->key << "\n";
 		inorder(root->left);
+		std::cout << root->key << " ";
 		inorder(root->right);
 	}
 }
@@ -99,32 +120,39 @@ void printGivenLevel(Node* root, int level)
     if (level == 1)
         std::cout <<" "<< root->key;
     else if (level > 1) {
- 
-        // Recursive Call
         printGivenLevel(root->left, level - 1);
         printGivenLevel(root->right, level - 1);
     }
 }
 
-int main()
-{
-	bst obj;
+// int main()
+// {
+// 	bst obj;
  
-	obj.root = obj.insert(NULL, 17);
-	obj.root = obj.insert(obj.root, 13);
-	obj.root = obj.insert(obj.root, 20);
-	obj.root = obj.insert(obj.root, 18);
-	obj.root = obj.insert(obj.root, 25);
-	obj.root = obj.insert(obj.root, 5);
-	obj.root = obj.insert(obj.root, 14);
-	obj.root = obj.insert(obj.root, 15);
-	obj.root = obj.insert(obj.root, 10);
-	obj.root = obj.insert(obj.root, 9);
-	inorder(obj.root);
-	std::cout << std::endl;
-	obj.deleteNode(obj.root, 13);
-	std::cout << std::endl;
-	printGivenLevel(obj.root, 2);
- 
-	return 0;
-}
+// 	obj.root = obj.insert(NULL, 17);
+// 	obj.root = obj.insert(obj.root, 13);
+// 	obj.root = obj.insert(obj.root, 20);
+// 	obj.root = obj.insert(obj.root, 18);
+// 	obj.root = obj.insert(obj.root, 25);
+// 	obj.root = obj.insert(obj.root, 5);
+// 	obj.root = obj.insert(obj.root, 14);
+// 	obj.root = obj.insert(obj.root, 15);
+// 	obj.root = obj.insert(obj.root, 10);
+// 	obj.root = obj.insert(obj.root, 9);
+// 	inorder(obj.root);
+// 	std::cout << std::endl;
+// 	// obj.deleteNode(obj.root, 13);
+// 	// std::cout << std::endl;
+// 	// printGivenLevel(obj.root, 2);
+// 	// Node* suc = obj.Successor(obj.root, 60);
+// 	// if (suc)
+// 	// 	std::cout << suc->key << std::endl;
+// 	// else
+// 	// 	std::cout << "NULL" << std::endl;
+// 	// Node* per = obj.Predecessor(obj.root, 5);
+// 	// if (per)
+// 	// 	std::cout << per->key << std::endl;
+// 	// else
+// 	// 	std::cout << "NULL" << std::endl;
+// 	return 0;
+// }
