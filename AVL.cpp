@@ -6,7 +6,7 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 12:53:27 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/08 17:48:30 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/08 18:19:18 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,7 @@ public:
 			return node;
 		//balancing
 		node->height = (height(node->left) > height(node->right)) ? height(node->left) + 1 : height(node->right) + 1;
-		int	bf = getBalanceFactor(node);
+		int	bf = getBalanceFactor(node); 
 		if (bf > 1 && key < node->left->key)
 			return RRotation(node);
 		if (bf < -1 && key > node->right->key)
