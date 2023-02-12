@@ -6,54 +6,54 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/08 18:20:56 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/11 18:51:18 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/12 18:51:40 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 
 enum Color {BLACK, RED};
+enum Events {
+	def = 0,
+	LeftRot,
+	LeftRotColorSwap,
+	RightRot,
+	RightRotColorSwap,
+};
 // template <typename T>
 struct Node
 {
 	int data;
 	Color color;
 	Node *left, *right, *parent;
-	Node(int _data) : data(_data) {
+	Events event;
+	Node(int _data, Node* _parent) : data(_data), parent(_parent) {
 		this->color = RED;
-		this->left = this->right = this->parent = NULL;
+		this->left = this->right = NULL;
+		event = def;
 	}
 };
 
 void print2DUtil(Node* root, int space)
 {
-    // Base case
     if (root == NULL)
         return;
- 
-    // Increase distance between levels
     space += 5;
- 
-    // Process right child first
     print2DUtil(root->right, space);
- 
-    // Print current node after space
-    // count
     std::cout << std::endl;
     for (int i = 5; i < space; i++)
         std::cout << " ";
-    std::cout << (root->color == RED ? "\e[0;31m" : "") << root->data << "\n";
- 
-    // Process left child
+    std::cout << (root->color == RED ? "\e[0;31m" : "") << root->data << "\e[0m\n";
+	// std::cout << root->data << (root->color == RED ? "R" : "B")  << "\n";
     print2DUtil(root->left, space);
 }
- 
-// Wrapper over print2DUtil()
+
 void print2D(Node* root)
 {
-    // Pass initial space count as 0
     print2DUtil(root, 0);
+	std::cout << "-------------------------\n";
 }
+
 // template <typename T>
 class RedBlackTree
 {
@@ -62,10 +62,10 @@ public:
 	Node *nil;
 public:
 	RedBlackTree() :root(NULL) {
-		nil = new Node(INT_MIN);
-		nil->color = BLACK;
-		nil->left = nil;
-		nil->right = nil;
+		// nil = new Node(INT_MIN);
+		// nil->color = BLACK;
+		// nil->left = nil;
+		// nil->right = nil;
 	};
 	/*
 			->
@@ -79,7 +79,7 @@ public:
 	{
 		Node* p = node->left;
 		Node* b = p->right;
-		b->parent = node; 
+		if ( b ) b->parent = node;
 		node->left = b;
 		p->parent = node->parent;
 		Node* qparent = node->parent;
@@ -105,7 +105,7 @@ public:
 	{
 		Node* q = node->right;
 		Node* b = q->left;
-		b->parent = node;
+		if (b) b->parent = node;
 		node->right = b;
 		q->parent = node->parent;
 		Node* pparent = node->parent;
@@ -128,40 +128,62 @@ public:
 			return gParent->left;
 		return NULL;
 	}
-	Node*    rbInsertFixup(Node* node, int key)
+	void	colorSwap(Node* nd1, Node* nd2)
 	{
-		if (!node){
-			node = new Node(key);
-			std::cout << node->color;}
+		Color colorTmp = nd1->color;
+		nd1->color = nd2->color;
+		nd2->color = colorTmp;
+	}
+	Node*    rbInsertFixup(Node* node, int key, Node* _parent = NULL)
+	{
+		if (!node) {
+			node = new Node(key, _parent);
+			if (_parent) {
+				if (node->parent->color == RED) {
+					Node* grandParent = node->parent->parent;
+					Node* uncle = getUncle(node);
+					if (grandParent && uncle && uncle->color == RED) {
+						node->parent->color = BLACK;
+						uncle->color = BLACK;
+						grandParent->color = RED;
+						print2D(root);
+					} 
+					else if (grandParent) {
+						if (node->data < node->parent->data && node->parent->data < grandParent->data) {
+							grandParent->event = RightRotColorSwap;
+						} else if (node->data > node->parent->data && node->parent->data > grandParent->data) {
+							grandParent->event = LeftRotColorSwap;
+						} else if (node->data > node->parent->data &&  node->parent->data < grandParent->data) {
+							node->parent->event = LeftRot;
+							grandParent->event = RightRotColorSwap;
+						} else {
+							node->parent->event = RightRot;
+							grandParent->event = LeftRotColorSwap;
+						}
+					}
+				}	
+			} 
+		}
 		else if (key > node->data)
-		{
-			node->right = rbInsertFixup(node->right, key);
-			node->right->parent = node;
-		}
+			node->right = rbInsertFixup(node->right, key, node);
 		else if (key < node->data)
-		{
-			node->left = rbInsertFixup(node->left, key);
-			node->left->parent = node;
-		}
+			node->left = rbInsertFixup(node->left, key, node);
 		else
 			return node;
-		print2D(root);
-		//balancng & recoloring
 		if (!node->parent)
 			node->color = BLACK;
-		else {
-			if (node->parent->color == RED) {
-				Node* uncle = getUncle(node);
-				if (node->parent->parent && uncle->color == RED) {
-					node->parent->color = BLACK;
-					uncle->color = BLACK;
-					uncle->parent->color = RED;
-				} 
-				else if (node->parent->parent) {
-					if (node->data < node->parent->data && node->parent->data < uncle->parent->data) {
-						return RRotation(uncle->parent)->left;
-					}
-				}
+		if (node->event != def) {
+			Events ev = node->event;
+			node->event = def;
+			if (ev == RightRot || ev == RightRotColorSwap) {
+				node = RRotation(node);
+				if (ev == RightRotColorSwap)
+					colorSwap(node, node->right);
+			}
+			if (ev == LeftRot || ev == LeftRotColorSwap) {
+				node = LRotation(node);
+				if (ev == LeftRotColorSwap)
+					colorSwap(node, node->left);
 			}
 		}
 		return node;
@@ -169,8 +191,15 @@ public:
 	void insert(Node *node, int key)
 	{
 		root = rbInsertFixup(node, key);
-		print2D(root);
-		// std::cout << "here\n";
+	}
+	Node*	SearchNode(Node* node, int key)
+	{
+		if (!node || node->data == key)
+			return node;
+		if (key < node->data)
+			return SearchNode(node->left, key);
+		else
+			return SearchNode(node->right, key);
 	}
 	~RedBlackTree() {};
 };
@@ -200,9 +229,22 @@ void printGivenLevel(Node* root, int level)
 int main() {
 	RedBlackTree obj;
 
-	obj.insert(obj.root, 3);
-	obj.insert(obj.root, 2);
-	obj.insert(obj.root, 1);
-	// inorder(obj.root);
+	obj.insert(obj.root, 50);
+	obj.insert(obj.root, 60);
+	obj.insert(obj.root, 20);
+	// print2D(obj.root);
+	obj.insert(obj.root, 10);
+	// print2D(obj.root);
+	obj.insert(obj.root, 15);
+	// print2D(obj.root);
+	obj.insert(obj.root, 18);
+	// print2D(obj.root);
+	obj.insert(obj.root, 16);
+	print2D(obj.root);
+	// Node* tst = obj.SearchNode(obj.root, 16);
+	// if (tst)
+	// 	std::cout << tst->data <<"\n";
+	// else
+	// 	std::cout << "no";
 	return 0;
 }
