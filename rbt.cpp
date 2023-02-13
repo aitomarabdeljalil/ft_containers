@@ -6,13 +6,13 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/08 18:20:56 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/12 18:51:40 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/13 16:48:21 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 
-enum Color {BLACK, RED};
+enum Color {RED, BLACK, DBLACK};
 enum Events {
 	def = 0,
 	LeftRot,
@@ -134,7 +134,7 @@ public:
 		nd1->color = nd2->color;
 		nd2->color = colorTmp;
 	}
-	Node*    rbInsertFixup(Node* node, int key, Node* _parent = NULL)
+	Node*	rbInsertFixup(Node* node, int key, Node* _parent = NULL)
 	{
 		if (!node) {
 			node = new Node(key, _parent);
@@ -188,7 +188,7 @@ public:
 		}
 		return node;
 	}
-	void insert(Node *node, int key)
+	void	insert(Node *node, int key)
 	{
 		root = rbInsertFixup(node, key);
 	}
@@ -200,6 +200,67 @@ public:
 			return SearchNode(node->left, key);
 		else
 			return SearchNode(node->right, key);
+	}
+	Node*	findMin(Node *node)
+	{
+		if (!node->left)
+			return node;
+		return findMin(node->left);
+	}
+	Node*	findSib(Node* parent, Node* child)
+	{
+		if (parent->left->data == child->data)
+			return parent->right;
+		return parent->left;
+	}
+	void	fixDB(Node* node)
+	{
+		Node* sib = findSib(node->parent, node);
+		if (!node->parent) {
+			node->color = BLACK;
+			return ;
+		}
+		if (sib->color == RED) {	
+			if (node->parent->left == node)
+				LRotation(node->parent);
+			else
+				RRotation(node->parent);
+			colorSwap(node->parent, sib);
+			fixDB(node);
+		}
+	}
+	Node*	deleteNode(Node *node, int key)
+	{
+		//BST deletion
+		Node	*tmp;
+	
+		if (!node)
+			return node;
+		if (key < node->data)
+			node->left = deleteNode(node->left, key);
+		else if (key > node->data)
+			node->right = deleteNode(node->right, key);
+		else {
+			if (!node->left) {
+				tmp = node->right;
+				delete node;
+				return tmp;
+			} else if (!node->right) {
+				tmp = node->left;
+				delete node;
+				return tmp;
+			}
+			tmp = findMin(node->right);
+			node->data = tmp->data;
+			node->right = deleteNode(node->right, tmp->data);
+		}
+		if (node->color == BLACK) {
+			node->color = DBLACK;
+			fixDB(node);
+			delete(node);
+			return NULL;
+		}
+		return node;
 	}
 	~RedBlackTree() {};
 };
@@ -246,5 +307,14 @@ int main() {
 	// 	std::cout << tst->data <<"\n";
 	// else
 	// 	std::cout << "no";
+	std::cout << "delete\n";
+	obj.root = obj.deleteNode(obj.root, 20);
+	print2D(obj.root);
+	// obj.root = obj.deleteNode(obj.root, 16);
+	// print2D(obj.root);
+	obj.root = obj.deleteNode(obj.root, 15);
+	print2D(obj.root);
+	obj.root = obj.deleteNode(obj.root, 16);
+	print2D(obj.root);
 	return 0;
 }
