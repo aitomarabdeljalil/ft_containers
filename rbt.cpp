@@ -215,18 +215,26 @@ public:
 	}
 	void	fixDB(Node* node)
 	{
+		Node* tmp = node;
 		Node* sib = findSib(node->parent, node);
+		if (node->color == DBLACK) return ;
 		if (!node->parent) {
 			node->color = BLACK;
 			return ;
 		}
 		if (sib->color == RED) {	
 			if (node->parent->left == node)
-				LRotation(node->parent);
+				tmp = LRotation(node->parent);
 			else
-				RRotation(node->parent);
+				tmp = RRotation(node->parent);
 			colorSwap(node->parent, sib);
 			fixDB(node);
+		} else {
+			if (!sib || (sib && (!sib->right && !sib->left) && (sib && (sib->right && sib->left)) {
+				node->color = BLACK;
+				node->parent->color = DBLACK;
+				fixDB(node->parent);
+			}
 		}
 	}
 	Node*	deleteNode(Node *node, int key)
@@ -254,7 +262,7 @@ public:
 			node->data = tmp->data;
 			node->right = deleteNode(node->right, tmp->data);
 		}
-		if (node->color == BLACK) {
+		if (node->color == BLACK && !node->left && !node->right) {
 			node->color = DBLACK;
 			fixDB(node);
 			delete(node);
