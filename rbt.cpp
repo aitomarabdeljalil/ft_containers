@@ -6,7 +6,7 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/08 18:20:56 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/13 16:48:21 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/14 14:14:54 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,59 +216,88 @@ public:
 	void	fixDB(Node* node)
 	{
 		Node* tmp = node;
-		Node* sib = findSib(node->parent, node);
-		if (node->color == DBLACK) return ;
+		if (node->color != DBLACK) return ;
 		if (!node->parent) {
 			node->color = BLACK;
 			return ;
 		}
-		if (sib->color == RED) {	
+		Node* sib = findSib(node->parent, node);
+		Node* grandparent = sib->parent->parent;
+		if (sib && sib->color == RED) {	
 			if (node->parent->left == node)
 				tmp = LRotation(node->parent);
 			else
 				tmp = RRotation(node->parent);
 			colorSwap(node->parent, sib);
+			print2D(root);
 			fixDB(node);
+			std::cout << "i am " << node->data << ", my parent is " << node->parent->data<< ", my grandparent is " << node->parent->parent->data << '\n';
+			print2D(root);
 		} else {
-			if (!sib || (sib && (!sib->right && !sib->left) && (sib && (sib->right && sib->left)) {
+			if (!sib || (sib && (!sib->right && !sib->left)) 
+				|| (sib && (sib->right && sib->left) && sib->left->color == BLACK && sib->right->color == BLACK)) {
 				node->color = BLACK;
-				node->parent->color = DBLACK;
+				node->parent->color = Color(node->parent->color + 1);
+				if (sib) sib->color = RED;
 				fixDB(node->parent);
+			} else if ((node->parent->left == node && sib->left && sib->left->color == RED) 
+					|| (node->parent->right == node && sib->right && sib->right->color == RED)) {
+					Node* nc;
+				if (node->parent->left == node && sib->left && sib->left->color == RED) {
+					nc = sib->left;
+					tmp = LRotation(RRotation(sib)->parent);
+					colorSwap(nc, node->parent);
+					tmp->left->color=BLACK;
+					if (grandparent) grandparent->left = tmp;
+				} else {
+					nc = sib->right;
+					tmp = RRotation(LRotation(sib)->parent);
+					colorSwap(nc, node->parent);
+					tmp->right->color=BLACK;
+					if (grandparent) grandparent->right = tmp;
+				}
+			} else {
+				Node* np = NULL;
+				if (node->parent->left == node && sib->right && sib->right->color == RED) {
+					np = sib->left;
+					tmp = LRotation(sib->parent);
+					colorSwap(np, node->parent);
+				} else {
+					np = sib->right;
+					tmp = RRotation(sib->parent);
+					colorSwap(np, node->parent);
+				}
 			}
 		}
 	}
-	Node*	deleteNode(Node *node, int key)
+	void	deleteNode(Node *&node, int key)
 	{
 		//BST deletion
 		Node	*tmp;
-	
 		if (!node)
-			return node;
-		if (key < node->data)
-			node->left = deleteNode(node->left, key);
+			return ;
+		else if (key < node->data)
+			deleteNode(node->left, key);
 		else if (key > node->data)
-			node->right = deleteNode(node->right, key);
-		else {
-			if (!node->left) {
-				tmp = node->right;
-				delete node;
-				return tmp;
-			} else if (!node->right) {
-				tmp = node->left;
-				delete node;
-				return tmp;
-			}
-			tmp = findMin(node->right);
-			node->data = tmp->data;
-			node->right = deleteNode(node->right, tmp->data);
-		}
-		if (node->color == BLACK && !node->left && !node->right) {
-			node->color = DBLACK;
+			deleteNode(node->right, key);
+		else if (!node->left && !node->right){
+			if (node->color == BLACK)
+				node->color = DBLACK;
 			fixDB(node);
 			delete(node);
-			return NULL;
+			node = NULL;
+		} else if (!node->left || !node->right){
+			if (!node->left)
+				tmp = node->right;
+			else if (!node->right)
+				tmp = node->left;
+			delete node;
+			node = NULL;
+		} else {		
+			tmp = findMin(node->right);
+			node->data = tmp->data;
+			deleteNode(node->right, tmp->data);
 		}
-		return node;
 	}
 	~RedBlackTree() {};
 };
@@ -315,14 +344,16 @@ int main() {
 	// 	std::cout << tst->data <<"\n";
 	// else
 	// 	std::cout << "no";
-	std::cout << "delete\n";
-	obj.root = obj.deleteNode(obj.root, 20);
+	std::cout << "--> delete\n";
+	obj.deleteNode(obj.root, 20);
+	print2D(obj.root);
+	obj.deleteNode(obj.root, 10);
+	print2D(obj.root);
+	obj.deleteNode(obj.root, 60);
 	print2D(obj.root);
 	// obj.root = obj.deleteNode(obj.root, 16);
 	// print2D(obj.root);
-	obj.root = obj.deleteNode(obj.root, 15);
-	print2D(obj.root);
-	obj.root = obj.deleteNode(obj.root, 16);
-	print2D(obj.root);
+	// obj.root = obj.deleteNode(obj.root, 16);
+	// print2D(obj.root);
 	return 0;
 }
