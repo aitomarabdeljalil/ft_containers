@@ -6,7 +6,7 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/08 18:20:56 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/15 19:49:57 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/17 18:54:00 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,20 +137,60 @@ public:
 	{
 		Node* q = node->right;
 		Node* b = q->left;
-		if (b) b->parent = node;
 		node->right = b;
-		q->parent = node->parent;
-		Node* pparent = node->parent;
-		if (pparent) {
-			if (pparent->data > node->data)
-				pparent->left = q;
-			else
-				pparent->right = q;
-		}
+		if (b) b->parent = node;
 		q->left = node;
+		q->parent = node->parent;
+		if (node->parent) {
+			if (node->parent->data > node->data)
+				node->parent->left = q;
+			else
+				node->parent->right = q;
+		}
 		node->parent = q;
 		return q;
 	}
+
+void rightRotation(Node* x)
+{
+	Node* y = x->left;
+	x->left = y->right;
+	if (y->right != NULL) {
+		y->right->parent = x;
+	}
+	y->parent = x->parent;
+	if (x->parent == NULL) {
+		root = y;
+	} else if (x == x->parent->right) {
+		x->parent->right = y;
+	} else {
+		x->parent->left = y;
+	}
+	y->right = x;
+	x->parent = y;
+}
+
+
+void leftRotation(Node* x)
+{
+	Node* y = x->right;
+	x->right = y->left;
+	if (y->left != NULL) {
+		y->left->parent = x;
+	}
+	y->parent = x->parent;
+	if (x->parent == NULL) {
+		root = y;
+	} else if (x == x->parent->left) {
+		x->parent->left = y;
+	} else {
+		x->parent->right = y;
+	}
+	y->left = x;
+	x->parent = y;
+}
+
+	
 	Node*	getUncle(Node* node)
 	{
 		Node*	gParent = node->parent ? node->parent->parent : NULL;
@@ -268,14 +308,22 @@ public:
 		Node* grandparent = sib->parent->parent;
 		Node* nparent = node->parent;
 		if (sib && sib->color == RED) {	
-			if (node->parent->left == node)
-				nparent = LRotation(node->parent);
+		std::cout << "sib : " << sib->data << "node parent " << nparent->data << "\n";
+		log();
+			colorSwap(nparent, sib);
+			if (nparent->left == node)
+				leftRotation(nparent);
 			else
-				nparent = RRotation(node->parent);
-			colorSwap(node->parent, sib);
-			// print2D(root);
-			fixDB(node);
+				rightRotation(nparent);
+			log();
 			// std::cout << "i am " << node->data << ", my parent is " << node->parent->data<< ", my grandparent is " << node->parent->parent->data << '\n';
+			// grandparent = node->parent;
+			// std::cout << "gp is " << grandparent->data << '\n';
+			// exit(0);
+			// node->parent = node->parent;
+			print2D(nparent);
+			log();
+			fixDB(node);
 			// print2D(root);
 		} else {
 			if (!sib || (sib && (!sib->right && !sib->left)) 
@@ -292,22 +340,22 @@ public:
 					tmp = LRotation(RRotation(sib)->parent);
 					colorSwap(nc, node->parent);
 					tmp->left->color=BLACK;
-					if (grandparent) grandparent->left = tmp;
+					// if (grandparent) grandparent->right = tmp;
 				} else {
 					nc = sib->right;
 					tmp = RRotation(LRotation(sib)->parent);
 					colorSwap(nc, node->parent);
 					tmp->right->color=BLACK;
-					if (grandparent) grandparent->right = tmp;
+					// if (grandparent) grandparent->left = tmp;
 				}
 			} else {
 				Node* np = NULL;
 				if (node->parent->left == node && sib->right && sib->right->color == RED) {
-					np = sib->left;
+					np = sib->right;
 					tmp = LRotation(sib->parent);
 					colorSwap(np, node->parent);
 				} else {
-					np = sib->right;
+					np = sib->left;
 					tmp = RRotation(sib->parent);
 					colorSwap(np, node->parent);
 				}
@@ -508,42 +556,6 @@ void inorder(Node* root)
 	}
 }
 
-bool isBalancedUtil(Node *root, int &maxh, int &minh)
-{
-    // Base case
-    if (root == NULL)
-    {
-        maxh = minh = 0;
-        return true;
-    }
- 
-    int lmxh, lmnh; // To store max and min heights of left subtree
-    int rmxh, rmnh; // To store max and min heights of right subtree
- 
-    // Check if left subtree is balanced, also set lmxh and lmnh
-    if (isBalancedUtil(root->left, lmxh, lmnh) == false)
-        return false;
- 
-    // Check if right subtree is balanced, also set rmxh and rmnh
-    if (isBalancedUtil(root->right, rmxh, rmnh) == false)
-        return false;
- 
-    // Set the max and min heights of this node for the parent call
-    maxh = std::max(lmxh, rmxh) + 1;
-    minh = std::min(lmnh, rmnh) + 1;
- 
-    // See if this node is balanced
-    if (maxh <= 2*minh)
-        return true;
- 
-    return false;
-}
-bool isBalanced(Node *root)
-{
-    int maxh, minh;
-    return isBalancedUtil(root, maxh, minh);
-}
-
 void printGivenLevel(Node* root, int level)
 {
     if (root == NULL)
@@ -629,7 +641,7 @@ int main(void) {
 	// obj.log();
 	obj.insert(obj.root, 3);
 	// obj.log();
-	obj.insert(obj.root, 4);
+	// obj.insert(obj.root, 4);
 	// obj.log();
 	obj.insert(obj.root, 5);
 	// obj.log();
@@ -654,8 +666,13 @@ int main(void) {
 	// else
 	// 	std::cout << "no";
 	// std::cout << "--> delete\n";
-	obj.deleteNode(obj.root, 0);
+	obj.deleteNode(obj.root, 6);
 	obj.log();
+	obj.deleteNode(obj.root, 0);
+	// std::cout << obj.root->data << obj.root->left->data << '\n';
+	// print2D(obj.root);
+	obj.log();
+	// print2D(obj.root);
 	// obj.deleteNode(obj.root, 10);
 	// obj.log();
 	// obj.deleteNode(obj.root, 60);
