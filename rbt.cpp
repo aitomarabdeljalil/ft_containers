@@ -6,7 +6,7 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/08 18:20:56 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/17 18:54:00 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/18 11:51:02 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,6 @@ void print2DUtil(Node* root, int space)
     for (int i = 5; i < space; i++)
         std::cout << " ";
     std::cout << (root->color == RED ? "\e[0;31m" : "") << root->data << "\e[0m\n";
-	// std::cout << root->data << (root->color == RED ? "R" : "B")  << "\n";
     print2DUtil(root->left, space);
 }
 
@@ -111,6 +110,7 @@ public:
 	{
 		Node* p = node->left;
 		Node* b = p->right;
+		if (node == root) root = p;
 		if ( b ) b->parent = node;
 		node->left = b;
 		p->parent = node->parent;
@@ -137,6 +137,7 @@ public:
 	{
 		Node* q = node->right;
 		Node* b = q->left;
+		if (node == root) root = q;
 		node->right = b;
 		if (b) b->parent = node;
 		q->left = node;
@@ -151,44 +152,43 @@ public:
 		return q;
 	}
 
-void rightRotation(Node* x)
-{
-	Node* y = x->left;
-	x->left = y->right;
-	if (y->right != NULL) {
-		y->right->parent = x;
+	void rightRotation(Node* x)
+	{
+		Node* y = x->left;
+		x->left = y->right;
+		if (y->right != NULL) {
+			y->right->parent = x;
+		}
+		y->parent = x->parent;
+		if (x->parent == NULL) {
+			root = y;
+		} else if (x == x->parent->right) {
+			x->parent->right = y;
+		} else {
+			x->parent->left = y;
+		}
+		y->right = x;
+		x->parent = y;
 	}
-	y->parent = x->parent;
-	if (x->parent == NULL) {
-		root = y;
-	} else if (x == x->parent->right) {
-		x->parent->right = y;
-	} else {
-		x->parent->left = y;
-	}
-	y->right = x;
-	x->parent = y;
-}
 
-
-void leftRotation(Node* x)
-{
-	Node* y = x->right;
-	x->right = y->left;
-	if (y->left != NULL) {
-		y->left->parent = x;
+	void leftRotation(Node* x)
+	{
+		Node* y = x->right;
+		x->right = y->left;
+		if (y->left != NULL) {
+			y->left->parent = x;
+		}
+		y->parent = x->parent;
+		if (x->parent == NULL) {
+			root = y;
+		} else if (x == x->parent->left) {
+			x->parent->left = y;
+		} else {
+			x->parent->right = y;
+		}
+		y->left = x;
+		x->parent = y;
 	}
-	y->parent = x->parent;
-	if (x->parent == NULL) {
-		root = y;
-	} else if (x == x->parent->left) {
-		x->parent->left = y;
-	} else {
-		x->parent->right = y;
-	}
-	y->left = x;
-	x->parent = y;
-}
 
 	
 	Node*	getUncle(Node* node)
@@ -261,7 +261,7 @@ void leftRotation(Node* x)
 			
 		return node;
 	}
-	void	insert(Node *node, int key)
+	void	insert(Node *&node, int key, const int idx)
 	{
 		// std::cout << " INSERTING " << std::setw( 16 ) << key << "\n";
 		root = rbInsertFixup(node, key);
@@ -271,7 +271,22 @@ void leftRotation(Node* x)
 		std::cout << "\e[1;31m";
 		assert( check( root, mp ) );
 		std::cout << "\e[0m";
-		std::cout << " INSERTED " << std::setw( 16 ) << key
+		std::cout << "idx " << std::setw(10) << idx <<" INSERTED " << std::setw( 16 ) << key
+				  << " SUCCESSFULLY\n\e[F\e[K";
+				//   << " SUCCESSFULLY\n";
+	}
+	void	remove(Node *&node, int key, const int idx)
+	{
+		// std::cout << " DELETING " << std::setw( 16 ) << key << "\n";
+		// log();
+		deleteNode(node, key);
+		// log();
+		// checking
+		std::map< Node *, std::vector< int > > mp;
+		std::cout << "\e[1;31m";
+		assert( check( root, mp ) );
+		std::cout << "\e[0m";
+		std::cout << "idx " << std::setw(10) << idx <<" DELETED " << std::setw( 16 ) << key
 				  << " SUCCESSFULLY\n\e[F\e[K";
 				//   << " SUCCESSFULLY\n";
 	}
@@ -308,21 +323,25 @@ void leftRotation(Node* x)
 		Node* grandparent = sib->parent->parent;
 		Node* nparent = node->parent;
 		if (sib && sib->color == RED) {	
-		std::cout << "sib : " << sib->data << "node parent " << nparent->data << "\n";
-		log();
+		// std::cout << "sib : " << sib->data << "node parent " << nparent->data << "\n";
+		// log();
 			colorSwap(nparent, sib);
+			// if (nparent->left == node)
+			// 	leftRotation(nparent);
+			// else
+			// 	rightRotation(nparent);
 			if (nparent->left == node)
-				leftRotation(nparent);
+				nparent = LRotation(nparent);
 			else
-				rightRotation(nparent);
-			log();
+				nparent = RRotation(nparent);
+			// log();
 			// std::cout << "i am " << node->data << ", my parent is " << node->parent->data<< ", my grandparent is " << node->parent->parent->data << '\n';
 			// grandparent = node->parent;
 			// std::cout << "gp is " << grandparent->data << '\n';
 			// exit(0);
 			// node->parent = node->parent;
-			print2D(nparent);
-			log();
+			// print2D(nparent);
+			// log();
 			fixDB(node);
 			// print2D(root);
 		} else {
@@ -331,33 +350,40 @@ void leftRotation(Node* x)
 				node->color = BLACK;
 				node->parent->color = Color(node->parent->color + 1);
 				if (sib) sib->color = RED;
+				// log();
 				fixDB(node->parent);
 			} else if ((node->parent->left == node && sib->left && sib->left->color == RED) 
 					|| (node->parent->right == node && sib->right && sib->right->color == RED)) {
 				Node* nc;
+				node->color = BLACK;
 				if (node->parent->left == node && sib->left && sib->left->color == RED) {
 					nc = sib->left;
 					tmp = LRotation(RRotation(sib)->parent);
-					colorSwap(nc, node->parent);
+					colorSwap(tmp, node->parent);
 					tmp->left->color=BLACK;
 					// if (grandparent) grandparent->right = tmp;
 				} else {
 					nc = sib->right;
 					tmp = RRotation(LRotation(sib)->parent);
-					colorSwap(nc, node->parent);
+					colorSwap(tmp, node->parent);
 					tmp->right->color=BLACK;
 					// if (grandparent) grandparent->left = tmp;
 				}
 			} else {
 				Node* np = NULL;
+				node->color = BLACK;
 				if (node->parent->left == node && sib->right && sib->right->color == RED) {
 					np = sib->right;
 					tmp = LRotation(sib->parent);
-					colorSwap(np, node->parent);
+					colorSwap(tmp, node->parent);
+					tmp->left->color=BLACK;
+					tmp->right->color=BLACK;
 				} else {
 					np = sib->left;
 					tmp = RRotation(sib->parent);
-					colorSwap(np, node->parent);
+					colorSwap(tmp, node->parent);
+					tmp->left->color=BLACK;
+					tmp->right->color=BLACK;
 				}
 			}
 		}
@@ -379,13 +405,16 @@ void leftRotation(Node* x)
 			delete(node);
 			node = NULL;
 		} else if (!node->left || !node->right){
+			tmp = node;
 			if (!node->left)
-				tmp = node->right;
+				node = node->right;
 			else if (!node->right)
-				tmp = node->left;
-			delete node;
-			node = NULL;
-		} else {		
+				node = node->left;
+			node->parent = tmp->parent;
+			node->color = tmp->color;
+			delete tmp;
+			tmp = NULL;
+		} else {
 			tmp = findMin(node->right);
 			node->data = tmp->data;
 			deleteNode(node->right, tmp->data);
@@ -497,6 +526,8 @@ void leftRotation(Node* x)
 	// checker {made by: jalalium}
 	bool check( Node *nd, std::map< Node *, std::vector< int > > &mp ) {
 		bool ok = true;
+		if (!nd)
+		return ok;
 		if ( nd->left != NULL ) {
 			if ( nd->data <= nd->left->data ) {
 				std::cout << "LEFT CHILD LARGER OR EQUAL TO PARENT " << nd->data << " "
@@ -570,113 +601,125 @@ void printGivenLevel(Node* root, int level)
 
 int main(void) {
 	
-	// // random
-	// {
-	// std::system( "clear" );
-	// std::cout << std::boolalpha;
-	// srand( time( NULL ) );
-	// std::random_device rd;
-	// std::mt19937	   mt( rd() );
-	// 	for ( int test = 0, total_tests = 4, sz = 100000; test < total_tests; test++ ) {
-	// 		std::cout << "\e[s\e[1;37m"
-	// 				  << "────────────────────────>"
-	// 				  << "     TEST " << test + 1 << " of " << total_tests
-	// 				  << " START    "
-	// 					 "<────────────────────────"
-	// 				  << "\e[0m\n";
-	// 		std::vector< int > in;
-	// 		for ( int i = 0, range = INT_MAX / sz; i < sz; i++ )
-	// 		// for ( int i = 0, range = 10; i < sz; i++ )
-	// 			in.push_back( rand() % range + range * i );
-	// 		std::vector< int > out( in );
-	// 		std::shuffle( in.begin(), in.end(), mt );
-	// 		std::shuffle( out.begin(), out.end(), mt );
-	// 		// std::cout << "insert ";
-	// 		// for ( int i = 0; i < sz; i++ ) std::cout << in.at( i ) << ' ';
-	// 		// std::cout << '\n';
-	// 		// std::cout << "delete ";
-	// 		// for ( int i = 0; i < sz; i++ ) std::cout << out.at( i ) << ' ';
-	// 		// std::cout << '\n';
-	// 		// exit( 0 );
-	// 		RedBlackTree n;
-	// 		std::cout << "\e[1;34m"
-	// 				  << "────────>    STARTING INSERTION    "
-	// 				  << "\e[0m\n";
-	// 		sleep( 1 );
-	// 		for ( int i = 0; i < sz; i++ ) n.insert(n.root, in.at( i ) );
-	// 		std::cout << "\e[F\e[J\e[1;32m"
-	// 				  << "────────>    INSERTION SUCCESS    "
-	// 				  << "\e[0m\n";
-	// 		sleep( 1 );
-	// 		// n.log();
-	// 		// std::cout << "\e[1;34m"
-	// 		// 		  << "────────>    STARTING DELETION    "
-	// 		// 		  << "\e[0m\n";
-	// 		// sleep( 1 );
-	// 		// for ( int i = 0; i < sz; i++ ) n.del( out.at( i ));
-	// 		// std::cout << "\e[F\e[J\e[1;32m"
-	// 		// 		  << "────────>    DELETION SUCCESS    "
-	// 		// 		  << "\e[0m\n";
-	// 		// sleep( 1 );
-	// 		std::cout << "\e[u\e[J\e[0;32m"
-	// 				  << "────────────────────────>"
-	// 				  << "    TEST " << test + 1 << " of " << total_tests
-	// 				  << " SUCCESS   "
-	// 					 "<────────────────────────"
-	// 				  << "\e[0m\n";
-	// 		// n.log();
-	// 	}
-	// 	std::cout << "\e[1;32m"
-	// 			  << "────────────────────────>    SUCCEEDED ALL TESTS   "
-	// 				 "<────────────────────────"
-	// 			  << "\e[0m\n";
-	// }
+	// random
+	{
+	std::system( "clear" );
+	std::cout << std::boolalpha;
+	srand( time( NULL ) );
+	std::random_device rd;
+	std::mt19937	   mt( rd() );
+		for ( int test = 0, total_tests = 50, sz = 1000, range = INT_MAX/sz; test < total_tests; test++ ) {
+			std::cout << "\e[s\e[1;37m"
+					  << "────────────────────────>"
+					  << "     TEST " << test + 1 << " of " << total_tests
+					  << " START    "
+						 "<────────────────────────"
+					  << "\e[0m\n";
+			std::vector< int > in;
+			for ( int i = 0; i < sz; i++ )
+			// for ( int i = 0, range = 10; i < sz; i++ )
+				in.push_back( rand() % range + range * i );
+			std::vector< int > out( in );
+			std::shuffle( in.begin(), in.end(), mt );
+			std::shuffle( out.begin(), out.end(), mt );
+			// print all
+			// std::cout << "insert ";
+			// for ( int i = 0; i < sz; i++ ) std::cout << in.at( i ) << ' ';
+			// std::cout << '\n';
+			// std::cout << "delete ";
+			// for ( int i = 0; i < sz; i++ ) std::cout << out.at( i ) << ' ';
+			// std::cout << '\n';
+			// exit( 0 );
+			RedBlackTree n;
+			std::cout << "\e[1;34m"
+					  << "────────>    STARTING INSERTION    "
+					  << "\e[0m\n";
+			usleep( 10000 );
+			for ( int i = 0; i < sz; i++ ) n.insert(n.root, in.at( i ), i );
+			std::cout << "\e[F\e[J\e[1;32m"
+					  << "────────>    INSERTION SUCCESS    "
+					  << "\e[0m\n";
+			usleep( 10000 );
+			// n.log();
+			std::cout << "\e[1;34m"
+					  << "────────>    STARTING DELETION    "
+					  << "\e[0m\n";
+			usleep( 10000 );
+			for ( int i = 0; i < sz; i++ ) n.remove(n.root, out.at( i ), i);
+			std::cout << "\e[F\e[J\e[1;32m"
+					  << "────────>    DELETION SUCCESS    "
+					  << "\e[0m\n";
+			usleep( 10000 );
+			std::cout << "\e[u\e[J\e[0;32m"
+					  << "────────────────────────>"
+					  << "    TEST " << test + 1 << " of " << total_tests
+					  << " SUCCESS   "
+						 "<────────────────────────"
+					  << "\e[0m\n";
+			// n.log();
+		}
+		std::cout << "\e[1;32m"
+				  << "────────────────────────>    SUCCEEDED ALL TESTS   "
+					 "<────────────────────────"
+				  << "\e[0m\n";
+	}
 	
 	// {
-	RedBlackTree obj;
+	// RedBlackTree obj;
 
-	obj.insert(obj.root, 1);
-	obj.insert(obj.root, 0);
-	obj.insert(obj.root, 2);
+	// obj.insert(obj.root, 1);
+	// obj.insert(obj.root, 0);
+	// obj.insert(obj.root, 2);
+	// // obj.log();
+	// obj.insert(obj.root, 3);
+	// // obj.log();
+	// // obj.insert(obj.root, 4);
+	// // obj.log();
+	// obj.insert(obj.root, 5);
+	// // obj.log();
+	// obj.insert(obj.root, 6);
+	// // std::cout << "right after insert 6\n";
+	// // obj.log();
+	// // obj.insert(obj.root, 7);
+	// // for (int i = 0; i < 8; i++)
+	// // {
+	// // 	obj.insert(obj.root, i);
+	// // 	if (!isBalanced(obj.root))
+	// // 	{
+	// // 		std::cout << "shot " << std::endl;
+	// // 		exit(5);
+	// // 	}
+	// // }
+	// // std::cout << "right after insert 7\n";
 	// obj.log();
-	obj.insert(obj.root, 3);
+	// // Node* tst = obj.SearchNode(obj.root, 16);
+	// // if (tst)
+	// // 	std::cout << tst->data <<"\n";
+	// // else
+	// // 	std::cout << "no";
+	// // std::cout << "--> delete\n";
+	// obj.deleteNode(obj.root, 6);
 	// obj.log();
-	// obj.insert(obj.root, 4);
+	// obj.deleteNode(obj.root, 0);
+	// // std::cout << obj.root->data << obj.root->left->data << '\n';
+	// // print2D(obj.root);
 	// obj.log();
-	obj.insert(obj.root, 5);
-	// obj.log();
-	obj.insert(obj.root, 6);
-	// std::cout << "right after insert 6\n";
-	// obj.log();
-	// obj.insert(obj.root, 7);
-	// for (int i = 0; i < 8; i++)
+	// // print2D(obj.root);
+	// // obj.deleteNode(obj.root, 10);
+	// // obj.log();
+	// // obj.deleteNode(obj.root, 60);
+	// // obj.log();
+	// // }
+	
 	// {
-	// 	obj.insert(obj.root, i);
-	// 	if (!isBalanced(obj.root))
-	// 	{
-	// 		std::cout << "shot " << std::endl;
-	// 		exit(5);
-	// 	}
-	// }
-	// std::cout << "right after insert 7\n";
-	obj.log();
-	// Node* tst = obj.SearchNode(obj.root, 16);
-	// if (tst)
-	// 	std::cout << tst->data <<"\n";
-	// else
-	// 	std::cout << "no";
-	// std::cout << "--> delete\n";
-	obj.deleteNode(obj.root, 6);
-	obj.log();
-	obj.deleteNode(obj.root, 0);
-	// std::cout << obj.root->data << obj.root->left->data << '\n';
-	// print2D(obj.root);
-	obj.log();
-	// print2D(obj.root);
-	// obj.deleteNode(obj.root, 10);
-	// obj.log();
-	// obj.deleteNode(obj.root, 60);
-	// obj.log();
+	// 	int in[] = {188,90,149,72,20,49,211,208,50,2,105,195,36,138,243,280,221,83,231,62,295,126,116,17,161,152,265,252,173,279};
+	// 	int out[] = {83,126,49,188,138,221,173,105,62,50,90,195,279,231,208,72,295,149,243,17,152,20,116,2,161,265,36,211,252,280};
+	// 	RedBlackTree obj;
+	// 	for (int i = 0; i < 30;i++) obj.insert(obj.root, in[i], i);
+	// 	// obj.log();
+	// 	for (int i = 0; i < 30;i++) obj.remove(obj.root, out[i], i);
+	// 	// obj.log();
+		
 	// }
 	return 0;
 }
