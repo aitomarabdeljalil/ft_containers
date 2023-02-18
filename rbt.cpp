@@ -6,7 +6,7 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/08 18:20:56 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/18 11:51:02 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/18 18:15:33 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,10 +255,8 @@ public:
 				node = LRotation(node);
 				if (ev == LeftRotColorSwap)
 					colorSwap(node, node->left);
-
 			}
 		}
-			
 		return node;
 	}
 	void	insert(Node *&node, int key, const int idx)
