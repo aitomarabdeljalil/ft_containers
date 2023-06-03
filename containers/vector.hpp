@@ -6,7 +6,7 @@
 /*   By: aait-oma <aait-oma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/17 17:01:32 by aait-oma          #+#    #+#             */
-/*   Updated: 2023/02/19 17:56:22 by aait-oma         ###   ########.fr       */
+/*   Updated: 2023/02/20 10:21:43 by aait-oma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,8 @@ namespace ft {
 	class vector
 	{
 		public:
-			vector() {
-				
-			};
-			bool empty() const {}
-			~vector(){};
+			vector() {};
+			~vector() {};
 			typedef T 											value_type;
 			typedef Alloc										allocator_type;
 			typedef typename allocator_type::size_type 			size_type;
@@ -70,7 +67,7 @@ namespace ft {
 			};
 
 		private:
-			T*				_array;
+			value_type*		_array;
 			allocator_type	_alloc;
 			size_type		_size;
 			size_type		_capacity;
